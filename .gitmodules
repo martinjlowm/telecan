@@ -1,0 +1,6 @@
+[submodule "lib/airprobe"]
+	path = lib/airprobe
+	url = git@github.com:martinjlowm/airprobe.git
+[submodule "lib/kalibrate-hackrf"]
+	path = lib/kalibrate-hackrf
+	url = git@github.com:martinjlowm/kalibrate-hackrf.git
