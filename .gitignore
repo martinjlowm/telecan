@@ -4,3 +4,28 @@ gsm_receive_hackrf_3.7.py
 test.cfile
 top_block.py
 working_freq.org
+src/telecom.*
+
+# autoconf/automake
+Makefile
+Makefile.in
+/aclocal.m4
+/ar-lib
+/autom4te.cache/
+/compile
+/config.*
+/configure
+/depcomp
+/install-sh
+/ltmain.sh
+/missing
+.dirstamp
+.deps/
+stamp-h?
+
+# Compiled lib files
+*.a
+
+# Temporary files and object files
+*~
+*.o
