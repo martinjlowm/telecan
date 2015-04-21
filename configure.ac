@@ -1,11 +1,13 @@
 AC_PREREQ([2.64])
-AC_INIT([telecom_analyzer], [27ccf5a], [martin@martinjlowm.dk], [telecom])
+AC_INIT([telecom_analyzer], [921afd9], [martin@martinjlowm.dk], [telecom])
 AC_CONFIG_SRCDIR([src/telecom_analyzer.cc])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
 m4_pattern_allow([AM_PROG_AR])
 AM_PROG_AR
+
+CXXFLAGS="-g -O0"
 
 # Checks for programs.
 AC_PROG_CXX
