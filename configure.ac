@@ -1,5 +1,5 @@
 AC_PREREQ([2.64])
-AC_INIT([telecom_analyzer], [f2a1c26], [martin@martinjlowm.dk], [telecom])
+AC_INIT([telecom_analyzer], [716d2eb], [martin@martinjlowm.dk], [telecom])
 AC_CONFIG_SRCDIR([src/telecom_analyzer.cc])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
