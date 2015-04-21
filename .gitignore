@@ -5,6 +5,7 @@ test.cfile
 top_block.py
 working_freq.org
 src/telecom.*
+src/telecom
 
 # autoconf/automake
 Makefile
