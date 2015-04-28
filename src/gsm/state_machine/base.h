@@ -37,12 +37,13 @@ namespace StateMachine {
 
 class Base {
  public:
-  virtual ~Base();
-  void SetCurrent(State *s);
+  virtual ~Base() {}
+  State* GetState();
+  void SetState(State *s);
   void Execute();
 
  protected:
-  class State *state_;
+  State *state_;
 };
 
 }  // namespace StateMachine

@@ -28,21 +28,52 @@
 
 #include "gsm/analyzer.h"
 
+#include <iostream>
 #include <arfcn_freq.h>
+
+#include "gsm/state_machine/synchronize.h"
 
 GSM::Analyzer::Analyzer(usrp_source *usrp, int band_indicator, bool scan_bts)
     : BaseAnalyzer(usrp, band_indicator) {
-  ssm_ = new StateMachine::Synchronize();
+  ssm_ = new StateMachine::Synchronize(this);
+
+  usrp_->start();
 
   if (scan_bts) {
     Scan();
   }
 }
 
+// TODO: Rethink this later. Should it be possible to change frequency
+// during runtime?
+// void GSM::Analyzer::SetCurrentChannel(int channel) {
+//   BaseAnalyzer::SetCurrentChannel(channel);
+
+//   StateMachine::State *current_state = ssm_->GetState();
+//   ssm_->SetState(new StateMachine::Synchronize::FCCHSearch());
+//   delete current_state;
+// }
+
 void GSM::Analyzer::Scan() {
-  for (int i = first_chan(band_indicator_); i >= 0; i = next_chan(i, band_indicator_)) {
-    channels_[i] = frequency;
+  scan_status_ = IS_SCANNING;
+  std::cout << "Scanning...\n";
+  // usrp_->start();
+  int i;
+  for (i = first_chan(band_indicator_); i >= 0; i = next_chan(i, band_indicator_)) {
+    std::cout << "\r  ARFCN: " << i << std::flush;
+    SetCurrentChannel(i);
+    ssm_->Execute();
   }
-  ssm_->Execute();
-  scanned_ = true;
+  std::cout << "\n";
+  // usrp_->stop();  // Stop doesn't work?
+
+  scan_status_ = HAS_SCANNED;
+}
+
+void GSM::Analyzer::Analyze() {
+  // usrp_->start();
+  while (1) {
+    ssm_->Execute();
+  }
+  // usrp_->stop();
 }

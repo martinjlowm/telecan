@@ -43,7 +43,8 @@ class Analyzer : public BaseAnalyzer {
   Analyzer(usrp_source *usrp, int band_indicator, bool scan_bts);
   ~Analyzer();
 
-  void CalibrateFrequency();
+  // void SetCurrentChannel(int channel);
+  void Analyze();
   void Scan();
  private:
   StateMachine::Synchronize *ssm_;

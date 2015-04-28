@@ -28,7 +28,11 @@
 
 #include "gsm/state_machine/base.h"
 
-void GSM::StateMachine::Base::SetCurrent(State *s) {
+GSM::StateMachine::State* GSM::StateMachine::Base::GetState() {
+  return state_;
+}
+
+void GSM::StateMachine::Base::SetState(State *s) {
   state_ = s;
 }
 

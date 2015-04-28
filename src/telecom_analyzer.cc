@@ -29,17 +29,22 @@
 #include <getopt.h>
 #include <libgen.h>
 
+#ifndef USRP_SOURCE_H_
+#define USRP_SOURCE_H_
 #include <usrp_source.h>
+#endif
 #include <arfcn_freq.h>
 
 #include "gsm/analyzer.h"
 #include "gsm/constants.h"
-#include "umts/analyzer.h"
-#include "lte/analyzer.h"
+// #include "umts/analyzer.h"
+// #include "lte/analyzer.h"
 
 // GSM 1800 has the most channels.
 #define MAX_GSM_CHANNELS (885 - 512)
 
+int g_verbosity = 0;
+int g_debug = 0;
 
 void usage(char *prog) {
   printf("telecom_analyzer based on kalibrate, Copyright (c) 2015, Martin Jesper Low Madsen\n");
@@ -61,9 +66,8 @@ void usage(char *prog) {
 int main(int argc, char **argv) {
   bool scan_bts = false;
   int option, band_indicator, channel = -1;
-  unsigned int decimation = 29;
-  long int fpga_master_clock_freq = 8000000;  // lowest rate supported
-  double frequency = -1.0, fd;
+  int64_t fpga_master_clock_freq = 8000000;  // lowest rate supported
+  unsigned int decimation = fpga_master_clock_freq / GSM_RATE;
   usrp_source *usrp;
 
   while ((option = getopt(argc, argv, "c:s:b:h?")) != EOF) {
@@ -90,8 +94,14 @@ int main(int argc, char **argv) {
     }
   }
 
+  usrp = new usrp_source (decimation, fpga_master_clock_freq);
+  if (!usrp) {
+    fprintf(stderr, "Error: usrp_source\n");
+    return -1;
+  }
+
   if (band_indicator == BI_NOT_DEFINED) {
-    fprintf(stderr, "error: c0_detect: band not defined\n");
+    fprintf(stderr, "Error: Band not defined\n");
     return -1;
   }
 
@@ -100,7 +110,6 @@ int main(int argc, char **argv) {
   }
 
   BaseAnalyzer *analyzer;
-
   if (band_indicator == GSM_850 ||
       band_indicator == GSM_R_900 ||
       band_indicator == GSM_900 ||
@@ -108,19 +117,17 @@ int main(int argc, char **argv) {
       band_indicator == DCS_1800 ||
       band_indicator == PCS_1900) {
     analyzer = new GSM::Analyzer(usrp, band_indicator, scan_bts);
+
     if (analyzer->HasScanned()) {
+      std::map<int, double> *channels = analyzer->GetAvailableChannels();
+      printf("Scan is complete. Found %lu channels.\n", channels.size());
+      for (const auto element : channels) {
+        printf("\tChannel: %d\tFrequency:%.2f\n", element->first, element->second);
+      }
+      channel = 781;
+      // channel = // Choose from GUI <--------------
       // Allow the user to choose one of these frequencies at some
       // point.
-      // Scanned channels are calibrated during scan.
-      // frequency =
-      // analyzer->SetFrequency(frequency);
-    } else {
-      frequency = arfcn_to_freq(channel, &band_indicator);
-      if (frequency < 869e6) {
-        usage(argv[0]);
-      }
-      analyzer->SetFrequency(frequency);
-      analyzer->CalibrateFrequency();  // Find FCCH
     }
   // } else if (band_indicator == UMTS_2100) {
   //   analyzer = new UMTS::Analyzer(band_indicator);
@@ -129,8 +136,10 @@ int main(int argc, char **argv) {
   } else {
     return 0;
   }
-  analyzer->Analyze();  // Assume we are synchronized. Be dependent on
-                        // state machines.
+  analyzer->SetCurrentChannel(channel);
+
+  // Run synchronization state machine
+  analyzer->Analyze();
 
   return 0;
 }

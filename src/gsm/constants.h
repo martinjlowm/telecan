@@ -29,6 +29,15 @@
 #ifndef GSM_CONSTANTS_H_
 #define GSM_CONSTANTS_H_
 
+#define AMP_GAIN 0
+#define LNA_GAIN 0
+#define VGA_GAIN 0
+
 #define GSM_RATE (1625000.0 / 6.0)
 
-#endif
+#define AVG_COUNT 50
+#define OFFSET_MAX 40e3
+
+#define NOTFOUND_MAX 10
+
+#endif  // GSM_CONSTANTS_H_

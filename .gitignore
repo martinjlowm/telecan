@@ -30,3 +30,6 @@ stamp-h?
 # Temporary files and object files
 *~
 *.o
+
+# GDB init file
+init.gdb

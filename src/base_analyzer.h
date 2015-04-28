@@ -29,30 +29,47 @@
 #ifndef BASE_ANALYZER_H_
 #define BASE_ANALYZER_H_
 
+#ifndef USRP_SOURCE_H_
+#define USRP_SOURCE_H_
 #include <usrp_source.h>
+#endif
 
 #include <map>
 
 class BaseAnalyzer {
  public:
   BaseAnalyzer(usrp_source *usrp, int band_indicator);
-  ~BaseAnalyzer();
+  ~BaseAnalyzer() {}
 
   int GetBandIndicator();
+
+  std::map<int, double> GetAvailableChannels();
   int GetCurrentChannel();
-  usrp_source* GetPeripheralDevice();
-  bool HasScanned();
+  void SetCurrentChannel(int channel);
+
+  double GetFrequency();
   void SetFrequency(double frequency);
 
+  usrp_source* GetPeripheralDevice();
+
+  bool HasScanned();
+  bool IsScanning();
+
+  virtual void Analyze() = 0;
   virtual void Scan() = 0;
-  virtual void CalibrateFrequency() = 0;
 
  protected:
   usrp_source *usrp_;
   int band_indicator_;
-  bool scanned_;
-  int current_channel_;
 
+  enum ScanStatus {
+    NOT_SCANNED,
+    HAS_SCANNED,
+    IS_SCANNING
+  } scan_status_;
+
+  int current_channel_;
+  // Channel -> Frequency map
   std::map<int, double> channels_;
 };
 

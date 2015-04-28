@@ -33,16 +33,16 @@ GSM::StateMachine::Burst::Burst() {
 }
 
 void GSM::StateMachine::Burst::SCH::Execute(Base *bsm) {
-  bsm->SetCurrent(new FCCH());
+  bsm->SetState(new FCCH());
   delete this;
 }
 
 void GSM::StateMachine::Burst::FCCH::Execute(Base *bsm) {
-  bsm->SetCurrent(new FCCH());
+  bsm->SetState(new FCCH());
   delete this;
 }
 
 void GSM::StateMachine::Burst::Normal::Execute(Base *bsm) {
-  bsm->SetCurrent(new FCCH());
+  bsm->SetState(new FCCH());
   delete this;
 }

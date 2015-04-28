@@ -28,8 +28,24 @@
 
 #include "base_analyzer.h"
 
+#include <arfcn_freq.h>
+
+#include "gsm/constants.h"
+
 BaseAnalyzer::BaseAnalyzer(usrp_source *usrp, int band_indicator) {
+  if (usrp->open(0) == -1) {
+    fprintf(stderr, "Error: usrp_source::open\n");
+    exit(-1);
+  }
+  if (!usrp->set_gain(AMP_GAIN, LNA_GAIN, VGA_GAIN)) {
+    fprintf (stderr, "Error: usrp_source::set_gain\n");
+    exit(-1);
+  }
+
+  scan_status_ = NOT_SCANNED;
+
   usrp_ = usrp;
+
   band_indicator_ = band_indicator;
 }
 
@@ -37,8 +53,33 @@ int BaseAnalyzer::GetBandIndicator() {
   return band_indicator_;
 }
 
+std::map<int, double> BaseAnalyzer::GetAvailableChannels() {
+  return channels_;
+}
+
 int BaseAnalyzer::GetCurrentChannel() {
   return current_channel_;
+}
+
+void BaseAnalyzer::SetCurrentChannel(int channel) {
+  current_channel_ = channel;
+}
+
+double BaseAnalyzer::GetFrequency() {
+  double frequency;
+  std::map<int, double>::iterator channel_iterator = channels_.find(current_channel_);
+
+  if (channel_iterator == channels_.end()) {
+    frequency = arfcn_to_freq(current_channel_, &band_indicator_);
+  } else {
+    frequency = channel_iterator->second;
+  }
+
+  return frequency;
+}
+
+void BaseAnalyzer::SetFrequency(double frequency) {
+  channels_[current_channel_] = frequency;
 }
 
 usrp_source* BaseAnalyzer::GetPeripheralDevice() {
@@ -46,9 +87,9 @@ usrp_source* BaseAnalyzer::GetPeripheralDevice() {
 }
 
 bool BaseAnalyzer::HasScanned() {
-  return scanned_;
+  return scan_status_ == HAS_SCANNED;
 }
 
-void BaseAnalyzer::SetFrequency(double frequency) {
-  frequency_ = frequency;
+bool BaseAnalyzer::IsScanning() {
+  return scan_status_ == IS_SCANNING;
 }

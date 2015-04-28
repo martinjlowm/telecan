@@ -6,8 +6,6 @@ telecom_SOURCES = \
    gsm/state_machine/state.h \
    gsm/state_machine/burst.cc \
    gsm/state_machine/burst.h \
-   gsm/state_machine/find_fcch.cc \
-   gsm/state_machine/find_fcch.h \
    gsm/state_machine/synchronize.cc \
    gsm/state_machine/synchronize.h \
    gsm/analyzer.cc \
