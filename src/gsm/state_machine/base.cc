@@ -28,14 +28,15 @@
 
 #include "gsm/state_machine/base.h"
 
-GSM::StateMachine::State* GSM::StateMachine::Base::GetState() {
+GSM::StateMachine::State* GSM::StateMachine::Base::state() {
   return state_;
 }
 
-void GSM::StateMachine::Base::SetState(State *s) {
+void GSM::StateMachine::Base::set_state(State *s) {
   state_ = s;
 }
 
-void GSM::StateMachine::Base::Execute() {
-  state_->Execute(this);
+void GSM::StateMachine::Base::Execute(const gr_complex *samples,
+                                      uint32_t num_samples) {
+  state_->Execute(this, samples, num_samples);
 }

@@ -1,0 +1,252 @@
+\chapter{Signal processing}
+In this chapter, we look at the basics of signal processing and how it
+relates to signal modulation, demodulation and decoding of information
+in \gls{GSM} communication. Such signals on the Um air interface in
+GSM are quadrature modulated using \gls{GMSK}.\ In this type of
+modulation, bits are mapped to symbols, pulse shaped by a gaussian
+filter and carried pairwise by two orthogonal signals, $90^{\circ}$
+degrees apart. These signals are combined into a final signal,
+$v \para{t}$, ready to be transmitted. Modulation schemes can carry
+symbol information by shifts in frequency, phase and amplitude. The
+\gls{GMSK} modulation scheme changes its phase in a continuous matter which
+reduces the required bandwidth compared to an abrupt change as in the
+phase shift keying modulation scheme.
+
+It follows from Euler's equation that a complex number in polar form
+is dependent on the phase angle, $\phi$, and can be represented as the
+sum of cosine- and sine functions of phase angle, where cosine is the
+real part and sine is the imaginary part,
+
+\begin{equation}
+  e^{i \phi} = \cos \para{\phi} + i \sin \para{\phi}, \quad \phi \in \mathbb{R}.
+\end{equation}
+
+\cref{fig:phasor_diagram} illustrates a so-called harmonic phasor of a
+signal, a complex number in polar form, and its real and imaginary
+parts which are made of two real orthogonal signals as a cosine- and a
+sine function. The amplitude of these two individual signals are
+referred to as a complex signal's \gls{I}-, and \gls{Q}-, components
+and they are important quantities in quadrature modulation. In fact,
+the modulated final signal, $v \para{t}$, can be identified as a
+complex signal made of its two orthogonal signal components. Hence the
+name quadrature modulation.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{figures/phasor_diagram}
+  \caption{I/Q phasor plot of a complex signal made of two
+    real signals, $90^{\circ}$ degrees apart.}
+  \label{fig:phasor_diagram}
+\end{figure}
+
+In modulation schemes, a number of bits are mapped to one symbol e.g.\
+\gls{BPSK}, and G/MSK map just a single bit and an element in such a
+binary data sequence of length $k$ at index $i$ can be described as
+
+\begin{equation}
+  d_i \in \left\{ 0, 1\right\}^k.
+\end{equation}
+
+In the same sense, symbols $D_i$ can be mapped directly to elements in
+the binary data sequence as
+
+\begin{equation}
+  D_i = \begin{cases}
+    +1 & \mbox{if } d_i = 1,\\
+    -1 & \mbox{if } d_i = 0,
+  \end{cases} \quad i = 1, \dots, k.
+\end{equation}
+
+Symbols are used to better recognize zero values, at which a regular
+digital square wave has no zero crossings. It is difficult in the
+analysis of an analog signal to distinguish between a sequence of
+digital zeros and no transmission at all~\cite[p. 157]{onion}.
+
+The symbol mapping is one step towards the modulation of a signal.
+
+\section{Modulation}
+Modulation comes in many shapes and its purpose is typically to carry
+information in an analog signal by varying the signal's phase,
+frequency or amplitude. To fulfill these requirements a radio system
+must convert the information to a format that can be carried by radio
+waves. In \gls{GSM}, the information is given by a binary sequence, mapped
+to symbols, which must be modulated such that the receiver is able to
+translate and receive the original message.
+
+A square wave that crosses zero is still not optimal, since such a
+signal requires high frequencies to shape its steep transitions. Its
+Fourier transform results in a $\sinc$ function in the frequency
+domain that is unlimited in bandwidth. The binary data must therefore
+be shaped into a different signal to limit the bandwidth. This process
+is called \textit{pulse shaping} where a digital signal is convolved
+into an analog signal through a pulse shaping filter. The $\sinc$ can
+be applied to such convolution of a digital signal which results in a
+very narrow and sharp bandwidth of low frequencies. In communication
+systems, this phenomena is ideal since it increases the amount of
+carriers which equals more channels in an \gls{FDMA} aspect.
+
+Another important situation that must be considered when choosing the
+pulse shape filter, is how a sequence of symbols will be transmitted
+continuously. The $\sinc$ function convolved with the symbols over a
+time interval cause adjacent symbols to overlap. This situation is
+called \gls{ISI}, and it makes symbols difficult to restore. For this
+reason, the type of filter is chosen based on the specific
+application.
+
+With two streams of pulse-shaped symbols in quadrature modulation, the
+modulated signal, $v \para{t}$, can be expressed as
+\begin{equation}
+  v \para{t} =
+  m_1 \para{t} \sqrt{2}\cos \para{2 \pi f_c t} -
+  m_2 \para{t} \sqrt{2}\sin \para{2 \pi f_c t}
+\label{eq:modulated_signal}
+\end{equation}
+where
+\begin{itemize}[labelindent=\parindent]
+\item[$m_1, m_2$] are the message streams of pulse-shaped symbols and
+\item[$f_c$] is the carrier frequency~\cite[p. 102]{onion}.
+\end{itemize}
+
+\cref{eq:modulated_signal} is illustrated in
+\cref{fig:signal_generation_diagram}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{figures/signal_generation_diagram}
+  \caption{Digital to analog signal conversion with quadrature modulation.}
+  \label{fig:signal_generation_diagram}
+\end{figure}
+\subsection{Gaussian minimum shift keying}
+% NOTE: Maybe include phase diagram over symbol time to show smooth
+% transitions over 3T
+%
+% Constellation diagram perhaps?
+\gls{GSM} uses the \gls{GMSK} modulation scheme that is a combination
+of \gls{MSK} modulation and a gaussian filter used for shaping the
+symbol pulse. Both \gls{GMSK} and \gls{MSK} avoid abrupt changes in
+the signal by smoothly changing the phase over time for each
+transmitted symbol. This behavior is known as a continuous phase
+scheme and it gives no discontinuity in the signal and reduces the
+required bandwidth. Since the information is carried in phase, the
+symbols are redefined and further mapped to constellation points, as
+illustrated in \cref{fig:constellation_diagram}, in a complex plane
+
+\begin{equation}
+  S_i = j \cdot D_i \cdot D_{i - 1} \cdot S_{i - 1}.
+  \label{eq:msk_mapping}
+\end{equation}
+
+$S_0$ is initially set to $1$ unless specified otherwise and the new
+mappings are later used for estimation of a symbol sequence.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{figures/constellation_diagram}
+  \caption{Symbols mapped to $\pi/2$ rotations over time as expressed by
+    \cref{eq:msk_mapping}.}
+  \label{fig:constellation_diagram}
+\end{figure}
+
+The gaussian filter shapes the symbols to stretch slightly longer in
+time, but it further reduces the signal's bandwidth. In fact, its time
+response is infinite and it is therefore truncated.
+
+The \gls{GSM} standard specifies a pulse shape of the gaussian function,
+$h \para{t}$, in \cref{eq:gaussian} with $BT = 0.3$. $T$ is the symbol
+period at $3.69\si{\mu s}$ and $B$ refers to the bandwidth of gaussian
+filter. By increasing the bandwidth, $B$, with $T$ declared constant,
+the shape begins to relate to MSK~\cite[p. 5--7]{modulation}.\
+\begin{equation}
+  \begin{aligned}
+    \delta &= \dfrac{\sqrt{\ln \para{2}}}{2 \pi BT}\\
+    h \para{t} &=
+    \dfrac{1}{\sqrt{2 \pi} \delta T}
+    e^{-t^2 / \para{2 \delta^2 T^2}}.
+  \end{aligned}
+  \label{eq:gaussian}
+\end{equation}
+
+As \cref{fig:gaussian} illustrates, the gaussian function's growth
+varies with the value of the $BT$ product. By adding a sequence of
+this growth with a symbol duration width of $T$, it is easily thought
+to cause trouble if the shape is too wide and that its frequency
+response widens as the shape gets thinner.
+
+With a fully modulated signal, the process must also be invertable at
+the receiver which is part of the sampling process.
+
+\begin{figure}[H]
+  \centering
+  \input{figures/plots/gaussian.tex}
+  \caption{Gaussian filter pulse shapes of different filter
+    bandwidths. The $BT = 0.3$ ratio is specified for GSM
+    communications.}
+  \label{fig:gaussian}
+\end{figure}
+
+\section{Sampling}
+The combined quadrature components in $v \para{t}$ are extracted at
+the receiver with the same orthogonal carriers of harmonic
+functions. The extraction in \cref{eq:demodulated_signal} uses the
+trigonometric identities,
+\begin{equation}
+  \begin{aligned}
+  \cos \para{x}^2 &= \dfrac{1}{2} \para{1 + \cos \para{x}}\\
+  &\text{ and }\\
+  \sin \para{x} \cos \para{x} &= \dfrac{1}{2} \para{\sin \para{x - y} +
+    \sin \para{x + y}}
+\end{aligned}
+\end{equation}
+to perform the third step. The last step reveals the original value of
+$m_1 \para{t}$ after the high carrier frequency has been filtered away
+by a low pass filter.
+\begin{equation}
+  \begin{aligned}
+    v \para{t} \sqrt{2} \cos \para{2 \pi f_c t} &=
+    \para{
+      m_1 \para{t} \sqrt{2} \cos \para{2 \pi f_c t} - \right.\\
+    & \hspace{1.7em} \left. m_2 \para{t} \sqrt{2} \sin \para{2 \pi f_c t}
+    } \sqrt{2} \cos \para{2 \pi f_c t}\\
+    &= m_1 \para{t} 2 \cos \para{2 \pi f_c t}^2 - m_2 \para{t} 2
+       \sin \para{2 \pi f_c t} \cos \para{2 \pi f_c t}\\
+    &= m_1 \para{t} \para{1 + \cos \para{4 \pi f_c t}} -
+       m_2 \para{t} \sin \para{4 \pi f_c t}\\
+    &= m_1 \para{t}
+  \end{aligned}
+  \label{eq:demodulated_signal}
+\end{equation}
+
+A similar extraction is done for $m_2 \para{t}$ and with both of these
+original messages their analog nature is converted into a discrete
+digital signal of \gls{I}- and \gls{Q} sample components by an
+\gls{ADC}.\ The Nyquist sampling theorem states, that to be able to
+reconstruct a real signal, the sampling frequency must be greater than
+the double of the signal's bandwidth~\cite[p. 111]{onion}. For a
+complex quadrature modulated signal, the sampling frequency can be
+reduced to the width of the bandwidth since two \gls{I}- and \gls{Q}
+components come from simultaneous sampling. Due to unavoidable noise
+in the sampled signal and reflections from multipath propagated
+signals, the received signal must be filtered, estimated and
+equalized.
+
+\section{Estimation}
+The noisy signal is estimated by a filter at the receiver which
+cross-correlates with an impulse response that, reversed in time,
+matches the original shape of the source pulse. The impulse response
+in this matched filter reverts the noise that was applied over the air
+interface and provides an estimation of the original noise-free
+signal. Training sequences in \gls{GSM} help approximate the impulse
+response coefficients used in this filter and time synchronize to the
+beginning of a burst. Since the training sequences are fixed bit
+patterns, these coefficients can be predicted for every burst in
+respect to the \gls{OSR}, the ratio between the bandwidth and the
+sampling frequency.
+
+The estimated output of the matched filter must then be equalized to
+mitigate the remaining interference on the channel, such that the
+sequence of data symbols can be extracted from the phase change in the
+\gls{I}/\gls{Q} samples. The autocorrelation function is useful in
+this situation as it describes the general dependence of the values of
+the samples at one time on the values of the samples at another
+time. A \gls{MLSE}, algorithm is often used to decide the binary
+values by the use of an autocorrelation of the impulse response.

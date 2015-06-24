@@ -31,43 +31,75 @@
 
 #include "gsm/state_machine/base.h"
 #include "gsm/state_machine/state.h"
-#include "gsm/state_machine/burst.h"
 #include "gsm/state_machine/find_fcch.h"
+
+#include "gsm/sequence_estimator.h"
+#include "gsm/burst_counter.h"
+#include "gsm/constants.h"
 
 namespace GSM {
 
 class Analyzer;
+class SequenceEstimator;
 
 namespace StateMachine {
 
 class Synchronize : public Base {
  public:
-  Synchronize();
+  explicit Synchronize(GSM::Analyzer *analyzer);
+
+  // Accessors
+  StateMachine::FindFCCH* ffsm();
+  int32_t FCCH_start_position();
+  void set_FCCH_start_position(int start_pos);
+  void set_sample_number(uint32_t sample_number);
+  uint32_t sample_number();
+
+  int32_t EstimateImpulseResponse(const gr_complex *samples,
+                                  std::string burst_type);
+  gr_complex *ImpulseResponse();
+
+  void SetSynchronizationVariables(uint32_t ncc,uint32_t bcc,
+                                   uint32_t t1, uint32_t t2, uint32_t t3);
 
   class FCCHSearch : public State {
    public:
-    void Execute(Base *ssm);
+    void Execute(Base *ssm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
   friend class FCCHSearch;
 
   class SCHSearch : public State {
    public:
-    void Execute(Base *ssm);
+    void Execute(Base *ssm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
-  friend class FCCHSearch;
+  friend class SCHSearch;
 
   class Synchronized : public State {
    public:
-    void Execute(Base *ssm);
+    void Execute(Base *ssm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
-  friend class FCCHSearch;
+  friend class Synchronized;
 
- protected:
   GSM::Analyzer *analyzer_;
+  uint32_t ncc_;
+  uint32_t bcc_;
+  BurstCounter *burst_counter_;
+ protected:
+
 
  private:
-  StateMachine::FindFCCH *ffsm_;
-  StateMachine::Burst *bsm_;
+  FindFCCH *ffsm_;
+  SequenceEstimator *seq_estimator_;
+
+  uint32_t failures_;
+  int FCCH_start_position_;
+  int32_t sample_number_;
 };
 
 }  // namespace StateMachine

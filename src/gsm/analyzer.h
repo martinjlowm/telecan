@@ -31,6 +31,12 @@
 
 #include "base_analyzer.h"
 
+#include <gnuradio/filter/firdes.h>
+#include <gnuradio/filter/fir_filter.h>
+
+#include "dsp/fractional_resampler.h"
+#include "device/hackrf.h"
+
 namespace GSM {
 namespace StateMachine {
 
@@ -40,12 +46,15 @@ class Synchronize;
 
 class Analyzer : public BaseAnalyzer {
  public:
-  Analyzer(usrp_source *usrp, int band_indicator, bool scan_bts);
+  Analyzer(Device::HackRF *sdr, int band_indicator, bool scan_bts);
   ~Analyzer();
 
-  // void SetCurrentChannel(int channel);
-  void Analyze();
+  void Analyze(const gr_complex *samples,
+               uint32_t num_samples);
   void Scan();
+
+  DSP::FractionalResampler *resampler_;
+  gr::filter::kernel::fir_filter_ccf *lpf_;
  private:
   StateMachine::Synchronize *ssm_;
 };

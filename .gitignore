@@ -6,12 +6,14 @@ top_block.py
 working_freq.org
 src/telecom.*
 src/telecom
-
+lib/gtest-1.7.0
+lib/gmock-1.7.0
 # autoconf/automake
 Makefile
 Makefile.in
 /aclocal.m4
 /ar-lib
+/build
 /autom4te.cache/
 /compile
 /config.*

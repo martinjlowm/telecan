@@ -1,0 +1,50 @@
+* Explore LAPDm frames (if UMTS)
+* Description
+- HackRF One
+- Analyze mobile network protocols (GSM)
+-
+
+The global system for mobile communication, GSM, has grown to be the
+leading mobile communication standard in the world since first
+introduced in 1982. GSM was initially developed as a wireless
+alternative to the public switched telephone network, PSTN, which
+allowed intercommunication in both technologies. GSM was later
+developed to support packet switching meaning it had access to the
+Internet. Circuit- and packet switched networks share a set of
+protocols used on the Um air interface between a base transceiver
+station, BTS, and the mobile phone. This project focus on design and
+implementation of a mobile network protocol analyzer piece of software,
+in terms of displaying mobile communication in real time, using a
+HackRF One, a software-defined radio, SDR, and a GSM module. After
+completing the project a successful candidate will be able to: -
+Describe protocols used on the Um air interface including security
+principles used in GSM. - Explain how the protocols are used to
+interact with the mobile network such as paging, call-establishment
+and termination. - Demonstrate a mobile network protocol analyzer
+piece of software that can analyze and display mobile communication in
+real time.
+* Week 1
+** Talk to Max about a project desription asap.
+** Max has some examples from last year.
+** Inception AUP (Agile Unified Process)
+** Risk analysis
+** Iterations
+
+
+
+* Week 2
+* Week 3
+* Week 4
+* Week 5
+* Week 6
+*
+* Week 7
+
+
+Report:
+Complex numbers
+shift keying
+GMSK etc.
+Sampling
+- Nyquist theorem
+bandpass filter f_c = 200MHz, f_s = 20MHz -> f_min = 180MHz, f_max = 220MHz

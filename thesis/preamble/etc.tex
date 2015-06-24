@@ -1,0 +1,54 @@
+% Content specific packages.
+
+\usepackage{algorithm}
+\usepackage[acronym]{glossaries}
+\makeglossaries
+\usepackage{algpseudocode}
+\usepackage{amssymb}
+% \usepackage{blindtext}
+\usepackage{enumitem}
+% \usepackage{fancyvrb}
+\usepackage{stmaryrd}
+\usepackage{minted}
+\definecolor{_red1}{cmyk}{0,0.25,0.25,0}
+\definecolor{_red2}{cmyk}{0,0.50,0.50,0}
+\definecolor{_red3}{cmyk}{0,0.75,0.75,0}
+\definecolor{_green1}{cmyk}{0.25,0,0.50,0}
+\definecolor{_green2}{cmyk}{0.50,0,0.75,0}
+\definecolor{_green3}{cmyk}{0.75,0,1,0}
+\definecolor{_blue1}{cmyk}{0.50,0.25,0,0}
+\definecolor{_blue2}{cmyk}{0.75,0.50,0,0}
+\definecolor{_blue3}{cmyk}{1,0.75,0,0}
+\SetLabelAlign{parright}{\parbox[t]{\labelwidth}{\raggedleft#1}}
+\setlist[description]{style=multiline,leftmargin=2cm,align=parright}
+%\usepackage{pgfplots}                 % Plot tools
+%\usetikzlibrary{
+%    arrows,
+%    matrix,
+%    positioning,
+%    shapes,
+%    topaths,
+%}
+%\pgfplotsset{compat=1.7}
+\def\arraystretch{1.5}
+\newglossarystyle{dtu_thesis_glossary}{%
+  \setglossarystyle{list}
+  \renewcommand*{\glossentry}[2]{%
+    \item[\glsentryitem{##1}\glsentryshort{##1}]%
+      \space\glstarget{##1}{\ecapitalisewords{\glossentrydesc{##1}}}}
+}
+\newacronymstyle{dtu_thesis_acronym}{
+  \ifglshaslong{\glslabel}{\glsgenacfmt}{\glsgenentryfmt}
+}{
+  \glshyperfirstfalse
+  \renewcommand*{\genacrfullformat}[2]{%
+    \textit{\glsentrylong{##1}},\space\glsentryshort{##1}\ignorespaces}
+  \renewcommand*{\Genacrfullformat}[2]{%
+    \unskip\textit{\glsentrylong{##1}},\space\Glsentryshort{##1}\ignorespaces}
+  \renewcommand*{\genplacrfullformat}[2]{%
+    \textit{\glsentrylongpl{##1}},\space\glsentryshortpl{##1}\ignorespaces}
+  \renewcommand*{\Genplacrfullformat}[2]{%
+    \unskip\textit{\Glsentrylongpl{##1}},\space\Glsentryshortpl{##1}\ignorespaces}
+  \renewcommand*{\acronymfont}[1]{\unskip##1\ignorespaces}
+  \renewcommand*{\acronymsort}[2]{##1}
+}

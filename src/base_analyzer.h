@@ -29,38 +29,39 @@
 #ifndef BASE_ANALYZER_H_
 #define BASE_ANALYZER_H_
 
-#ifndef USRP_SOURCE_H_
-#define USRP_SOURCE_H_
-#include <usrp_source.h>
-#endif
+#include "device/hackrf.h"
 
 #include <map>
 
 class BaseAnalyzer {
  public:
-  BaseAnalyzer(usrp_source *usrp, int band_indicator);
-  ~BaseAnalyzer() {}
+  BaseAnalyzer(Device::HackRF *sdr, int band_indicator);
+  ~BaseAnalyzer();
 
-  int GetBandIndicator();
+  int32_t band_indicator();
 
+  int32_t current_channel();
+  void set_current_channel(int channel);
   std::map<int, double> GetAvailableChannels();
-  int GetCurrentChannel();
-  void SetCurrentChannel(int channel);
 
   double GetFrequency();
   void SetFrequency(double frequency);
 
-  usrp_source* GetPeripheralDevice();
+  Device::HackRF* GetPeripheralDevice();
 
   bool HasScanned();
   bool IsScanning();
+  bool AllConsumed(int32_t num_samples);
+  void Consume(int32_t samples);
 
-  virtual void Analyze() = 0;
+  void Analyze();
+  virtual void Analyze(const gr_complex *samples,
+                       uint32_t num_samples) = 0;
   virtual void Scan() = 0;
 
  protected:
-  usrp_source *usrp_;
-  int band_indicator_;
+  Device::HackRF *sdr_;
+  int32_t band_indicator_;
 
   enum ScanStatus {
     NOT_SCANNED,
@@ -69,8 +70,8 @@ class BaseAnalyzer {
   } scan_status_;
 
   int current_channel_;
-  // Channel -> Frequency map
   std::map<int, double> channels_;
+  uint32_t read_num_samples_;
 };
 
 #endif  // BASE_ANALYZER_H_

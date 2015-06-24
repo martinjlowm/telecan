@@ -28,43 +28,41 @@
 
 #include "base_analyzer.h"
 
-#include <arfcn_freq.h>
+#include "helper_functions.h"
+#include "device/hackrf.h"
 
 #include "gsm/constants.h"
 
-BaseAnalyzer::BaseAnalyzer(usrp_source *usrp, int band_indicator) {
-  if (usrp->open(0) == -1) {
-    fprintf(stderr, "Error: usrp_source::open\n");
+BaseAnalyzer::BaseAnalyzer(Device::HackRF *sdr, int band_indicator) {
+  if (sdr->Open() == -1) {
+    fprintf(stderr, "Error: SDR::Open\n");
     exit(-1);
   }
-  if (!usrp->set_gain(AMP_GAIN, LNA_GAIN, VGA_GAIN)) {
-    fprintf (stderr, "Error: usrp_source::set_gain\n");
+  if (!sdr->set_gain(kExternalAmplifierGain,
+                     kLowNoiseAmplifierGain,
+                     kVariableGainAmplifer)) {
+    fprintf (stderr, "Error: SDR::set_gain\n");
     exit(-1);
   }
 
   scan_status_ = NOT_SCANNED;
 
-  usrp_ = usrp;
+  sdr_ = sdr;
 
   band_indicator_ = band_indicator;
 }
+BaseAnalyzer::~BaseAnalyzer() {}
 
-int BaseAnalyzer::GetBandIndicator() {
-  return band_indicator_;
-}
+int32_t BaseAnalyzer::band_indicator() { return band_indicator_; }
 
-std::map<int, double> BaseAnalyzer::GetAvailableChannels() {
-  return channels_;
-}
 
-int BaseAnalyzer::GetCurrentChannel() {
-  return current_channel_;
-}
+// Channel
+int BaseAnalyzer::current_channel() { return current_channel_; }
+void BaseAnalyzer::set_current_channel(int channel) { current_channel_ = channel; }
+std::map<int, double> BaseAnalyzer::GetAvailableChannels() { return channels_; }
 
-void BaseAnalyzer::SetCurrentChannel(int channel) {
-  current_channel_ = channel;
-}
 
+// Frequency
 double BaseAnalyzer::GetFrequency() {
   double frequency;
   std::map<int, double>::iterator channel_iterator = channels_.find(current_channel_);
@@ -77,19 +75,55 @@ double BaseAnalyzer::GetFrequency() {
 
   return frequency;
 }
+void BaseAnalyzer::SetFrequency(double frequency) { channels_[current_channel_] = frequency; }
 
-void BaseAnalyzer::SetFrequency(double frequency) {
-  channels_[current_channel_] = frequency;
-}
 
-usrp_source* BaseAnalyzer::GetPeripheralDevice() {
-  return usrp_;
-}
+// Get SDR interface
+Device::HackRF* BaseAnalyzer::GetPeripheralDevice() { return sdr_; }
 
-bool BaseAnalyzer::HasScanned() {
-  return scan_status_ == HAS_SCANNED;
-}
 
-bool BaseAnalyzer::IsScanning() {
-  return scan_status_ == IS_SCANNING;
+// Scan status
+bool BaseAnalyzer::HasScanned() { return scan_status_ == HAS_SCANNED; }
+bool BaseAnalyzer::IsScanning() { return scan_status_ == IS_SCANNING; }
+
+
+void BaseAnalyzer::Analyze() {
+  uint32_t new_overruns, overruns = 0;
+
+  Device::CircularBuffer *buffer = sdr_->get_buffer();
+  gr_complex *samples;
+
+  uint32_t num_samples;
+
+  double frequency = GetFrequency();
+
+  if (!sdr_->Tune(frequency)) {
+    exit(-1);
+  }
+
+  do {
+    sdr_->Flush();
+
+    do {
+      // Attempt to fetch 12 frames and one burst. Rethink this, X
+      // samples are fetched and downsampled to kOSR times GSM
+      // bitrate.
+
+      if (sdr_->Fill(read_num_samples_, &new_overruns)) {
+        exit(-1);
+      }
+
+      if (new_overruns) {
+        overruns += new_overruns;
+        sdr_->Flush();
+      }
+    } while (new_overruns);
+
+    // Fetch samples and the number which was actually read.
+    samples = static_cast<gr_complex *>(buffer->Peek(&num_samples));
+
+    Analyze(samples, num_samples);
+
+    // ssm_->Execute(samples, num_samples);
+  } while (scan_status_ != IS_SCANNING);
 }

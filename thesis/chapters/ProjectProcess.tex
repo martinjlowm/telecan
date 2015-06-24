@@ -1,0 +1,155 @@
+\chapter{Project process}
+This chapter walks through my point of view of the overall process
+during the project and it reflects thereon. The inception phase of the
+project started in February with an initial interest in the
+understanding of the lower level protocols in mobile communications. I
+chose \gls{GSM} as the main series of technologies to examine because
+there is a safe and sufficient amount of documentation available. The
+preliminary planning of the project was divided into multiple
+milestones and a risk analysis was performed to predict possible
+drawbacks.
+
+\section{Preliminary planning}
+The initial plan for the project was to divide the project into the
+following milestones over the project period of twentyone weeks.
+
+\begin{itemize}
+\item Preparation of the project
+\item Initial \gls{GSM} work using a HackRF One
+\item Implement first wave of \gls{GSM} test cases
+\item Implement second wave of \gls{GSM} test cases
+\item Implement third wave of \gls{GSM} test cases
+\item \gls{GUI} display of \gls{GSM} monitored information
+\item Finalize project
+\end{itemize}
+
+The preparation of the project included a risk analysis and a search
+for litterature that describes parts on the subject of communication
+on the \gls{GSM} Um interface. With a collection of litterature at
+hand, the initial design and implementation stage began. This led to a
+series of waves to implement test cases relevant for parsing of
+\gls{GSM} traffic. Lastly, the monitored traffic was planned to be
+presented in a \gls{GUI} in time for the last milestone, such that the
+focus could be on the thesis then.
+
+For this process to be as smooth as possible the following risk
+analysis was performed.
+
+\subsection{Risk analysis}
+\cref{tab:risk_analysis} lists my assumptions of possible drawbacks
+that could occur during the project process.
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|p{0.15\linewidth}|
+                   p{0.14\linewidth}|
+                   p{0.1\linewidth}|
+                   p{0.15\linewidth}|
+                   p{0.30\linewidth}|}
+    % BEGIN RECEIVE ORGTBL risk_analysis
+    \hline
+    \textbf{Description} & \textbf{Likelihood} & \textbf{Impact} & \textbf{Result} & \textbf{Prevention} \\
+    \hline
+    Writing the report could take longer than expected.
+                & Medium     & Medium & The report will be handed in
+                                        incomplete.
+                                               & Multiple draft
+                                                 reports should be
+                                                 handed in during the
+                                                 last milestone. Some
+                                                 sections of the
+                                                 report can be written
+                                                 in parallel to the
+                                                 coding in previous
+                                                 milestones. \\
+    \hline
+    Time consumption of each milestones may be wrongly estimated.
+                & High       & Medium & What was meant to be done in a
+                                        specific milestone may not be
+                                        complete.
+                                               & Continue to the next
+                                                 milestone and if time
+                                                 allows it return back
+                                                 to the incomplete one
+                                                 and finish it. \\
+    \hline
+    Illness     & Low        & Medium & Tasks may be more time
+                                        consuming.
+                                               & None. \\
+    \hline
+    Physical damage to- or theft of laptop.
+                & Low        & High   & Loss of work that in turn
+                                        complicates the time plan
+                                        schedule.
+                                               & Have a cloud backup
+                                                 service active at all
+                                                 times. \\
+    \hline
+    Delay in HackRF One delivery.
+                & High       & High   & Unable to implement software.
+                                               & Look for an
+                                                 alternative device to
+                                                 use temporarily until
+                                                 the HackRF One
+                                                 arrives. \\
+    \hline
+    % END RECEIVE ORGTBL risk_analysis
+  \end{tabular}
+  \caption{Risk analysis made at project inception.}
+  \label{tab:risk_analysis}
+\end{table}
+\begin{comment}
+  #+ORGTBL: SEND risk_analysis orgtbl-to-latex :splice t
+  |-------------+------------+--------+-------------+-------------------------|
+  | <11>        | <10>       | <6>    | <11>        | <23>                    |
+  | Description | Likelihood | Impact | Result      | Prevention              |
+  |-------------+------------+--------+-------------+-------------------------|
+  | Writing the report could take longer than expected. | Medium     | Medium | The report will be handed in incomplete. | Multiple draft reports should be handed in during the last milestone. Some sections of the report can be written in parallel to the coding in previous milestones. |
+  |-------------+------------+--------+-------------+-------------------------|
+  | Time consumption of each milestones may be wrongly estimated. | High       | Medium | What was meant to be done in a specific milestone may not be complete. | Continue to the next milestone and if time allows it return back to the incomplete one and finish it. |
+  |-------------+------------+--------+-------------+-------------------------|
+  | Illness     | Low        | Medium | Tasks may be more time consuming. | None                    |
+  |-------------+------------+--------+-------------+-------------------------|
+  | Physical damage to- or theft of laptop. | Low        | High   | Loss of work that in turn complicates the time plan schedule. | Have a cloud backup service active at all times. |
+  |-------------+------------+--------+-------------+-------------------------|
+  | Delay in HackRF One delivery. | High       | High   | Unable to implement software. | Look for an alternative device to use temporarily until the HackRF One arrives. |
+  |-------------+------------+--------+-------------+-------------------------|
+\end{comment}
+
+\section{Evaluation}
+The initial planning turned out to be unrealistic and the scope of the
+project was much different than what was predicted. The project
+process made a turn towards a more digital signal processing-based
+focus rather than the intended analysis of \gls{GSM} traffic. This
+implied that the goal of a \gls{GUI} and a fully implementation of
+\gls{GSM} traffic parsing were not reached. The synchronization,
+sequence estimation and decoding introduced many more elements behind
+the scene than what were expected, and in turn a lot more theory to be
+examined and learned. These factors were the main causes for the
+imperfect result and there is, as listed in \cref{cha:future_work},
+plenty more work to be done in the future.
+
+To that end, the project has not been managed well and the aim of the
+project could have been clearer if more time and energy had been spent
+on researching the topic. The planned deadlines throughout the process
+were not met and work kept getting postponed which led to a huge
+amount of work the last month. If the scope of the project had been
+clearer, it might have been easier to comply with revised deadlines.
+
+The planned milestones ended up being meaningless as the specifics of
+the \gls{GSM} air interface were learned, and time allocations of
+``test case waves'' were greatly misestimated. These allocations
+assumed that everything prior to the parser would have been done and
+that was not the case. To that end, the HackRF One arrived eight weeks
+late and this time should have been better valued in terms of
+research. The misestimated time allocations might have been discovered
+earlier and then work could have been distributed better.
+
+A lot of work was done the last month, but there were some moments
+that consumed more time than others. Since the software implementation
+was developed as a standalone application and without any useful
+sample debugging utility, a lot of time was spent on debugging the
+code. If GNU Radio had been used as a platform, then a great deal of
+this time would have been saved, since it provides efficient tools to
+visualize and debug input samples. In the end, a more complete
+implementation could have been accomplished if GNU Radio had been used
+as a platform.

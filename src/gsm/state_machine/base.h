@@ -38,9 +38,12 @@ namespace StateMachine {
 class Base {
  public:
   virtual ~Base() {}
-  State* GetState();
-  void SetState(State *s);
-  void Execute();
+
+  // Accessors
+  State* state();
+  void set_state(State *s);
+
+  void Execute(const gr_complex *samples, uint32_t num_samples);
 
  protected:
   State *state_;

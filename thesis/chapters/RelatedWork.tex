@@ -1,0 +1,39 @@
+\chapter{Related Work}
+In this chapter, we take a brief look at other existing software
+defined radio solutions and projects that have inspired my process,
+design and implemention of this project.
+\begin{itemize}
+\item GNU Radio is a free and open-source software development toolkit
+  that provides signal processing blocks to implement software
+  radios. It can be used with readily-available low-cost external RF
+  hardware to create software-defined radios, or without hardware in a
+  simulation-like environment. It is widely used in hobbyist, academic
+  and commercial environments to support both wireless communications
+  research and real-world radio systems~\cite{gnuradio}.
+\item AirProbe is a \gls{GSM}-sniffer project that provides tools to
+  parse \gls{GSM} communication using \gls{SDR}.\ Its main module
+  interfaces with GNU Radio from which the tuning frequency and gain
+  can be changed through a \gls{GUI}~\cite{airprobe}.
+\item gr-gsm is an actively developed project based on the \gls{GSM}
+  receiver module from AirProbe. It provides the same functionality as
+  AirProbe, thus decodes \gls{GSM} communication using GNU Radio data
+  structures and graphical interface~\cite{grgsm}.
+\item Kalibrate is a utility, originally developed by Joshua Lackey,
+  that scans \gls{GSM} bands for base transceiver stations by
+  searching for a frequency correction burst that is transmitted
+  periodically by the BTS. It uses the algorithm as described in the
+  paper \textit{Robust Frequency Burst Detection Algorithm for GSM /
+    GPRS} by G. Narendra Varma, Usha Sahu and G. Prabhu Charan to find
+  a pure sinusoid of all zero bits within a GSM
+  burst~\cite{kalibrate}.
+\item OpenBSC is an open source Linux software application that
+  implements \gls{GSM} telecommunication protocols and functions as a
+  software-based mobile backhaul entity using a software defined radio
+  as transceiver peripheral~\cite{openbsc}.
+\item OpenBTS is similar to OpenBSC, but is not limited to \gls{GSM}
+  protocols and it supports mobile devices presented as \gls{SIP},
+  endpoints which makes \gls{VoIP}, possible~\cite{openbts}.
+\item gr-LTE provides a similar approach of gr-gsm by demodulating a
+  signal and then synchronizing to it, but for \gls{LTE}
+  networks~\cite{grlte}.
+\end{itemize}

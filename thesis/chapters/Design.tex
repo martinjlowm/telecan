@@ -1,0 +1,581 @@
+\chapter{Telecommunication Analyzer Design}
+\label{cha:design}
+Analysis of the \gls{GSM} Um air interface requires knowledge of
+nearby \gls{GSM} cells and their corresponding frequencies. In
+Denmark, both $900\si{MHz}$ and $1800\si{MHz}$ are common frequency
+bands used for mobile phone communication in \gls{GSM} and the
+occupied channels within these bands can be scanned for data
+activity. This functionality defines the first set of requirements for
+the design of the telecommunication analyzer using an \gls{SDR} to
+tune in to an occupied \gls{GSM} channel and analyze its data
+traffic. The \gls{GSM} standard defines the two logical channels,
+\gls{FCCH} and \gls{SCH}, with the purpose of synchronizing to the
+data traffic. The \gls{FCCH} burst is transmitted periodically which
+informs about the occupation of a channel from a nearby \gls{BTS} and
+\gls{GSM} cell. The \gls{SCH} is similar, but it is used to
+synchronize to a specific point in time and it carries information
+regarding current frame number and \gls{BTS} identity.
+
+Using these two synchronization channels, all traffic carried on a
+single frequency channel can be monitored and parsed accordingly. The
+telecommunication analyzer should be able to use these channels to
+synchronize itself to the traffic and extract information therein.
+
+This chapter walks through the architecture of my design for a
+telecommunication analyzer which uses an \gls{SDR} to analyze
+\gls{GSM} data traffic and extract information about the
+network. \cref{fig:implementation_design} illustrates the structure of
+the analyzer and a HackRF One is used to serve as an \gls{SDR}.\ The
+colored blocks in the diagram are described in detail throughout this
+chapter from the bottom and up.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.55\textwidth]{figures/implementation_design}
+  \caption{The structure of the telecommunication analyzer. A
+    bidirectional path exists between the \gls{SDR} and the analyzer
+    object for configuration purposes. The \gls{SDR} samples work
+    their way upwards and are translated to digital information at the
+    sequence estimation block.}
+  \label{fig:implementation_design}
+\end{figure}
+
+\section{Radio device interaction}
+The bottom part of the telecommunication analyzer architecture
+controls the interaction with the HackRF One. Frequency tuning,
+amplifier control and data transfer are three examples of parameters
+that can be controlled through software over a \gls{USB} 2.0
+interface. The host node enables the device and controls these
+parameters whenever the analyzer application is alive and active. When
+active, the root of the application ensures a flow of \gls{I}/\gls{Q}
+samples between the \gls{SDR} and the application. By communicating
+with the upper layers of the analyzer structure, the analyzer node,
+the actual behavior is determined by the mobile technology of
+interest. \cref{fig:device_host_usb_interface} illustrates the two
+main operations on the link between the host and the \gls{SDR}, namely
+frequency tuning and the flow of quadrature samples to the
+application. These samples are then processed by the analyzer.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{figures/device_host_usb_interface}
+  \caption{A bidirectional link between the host and the HackRF One
+    used to configure the device and move samples of a signal between
+    the two.}
+  \label{fig:device_host_usb_interface}
+\end{figure}
+
+\section{Analyzer}
+The analyzer is designed such that support for multiple technologies
+like \gls{GPRS}, \gls{UMTS}, \gls{HSPA} etc.\ is relatively easy to
+implement. The core analyzer provides a common interface with the
+radio device and leaves technology specific functionality
+to the inheritors. In the situation of \gls{GSM}, the application may,
+as an example, perform a \gls{GSM} cell search and iterate all
+possible channels given by a band's \gls{ARFCN} identity and attempt
+to find \gls{FCCH} traffic. The analyzer node keeps track of its
+findings during this search. It is up to the user to decide exactly
+which channel to monitor. The upper layers process the \gls{I}/\gls{Q}
+samples further, towards the extraction of the digital information in
+the timeslots. Before leaving the analyzer, the \gls{I}/\gls{Q}
+samples are passed through a low pass filter to remove high
+frequencies and to further improve the signal, the frequency
+synchronization state provides feedback on a possible offset in
+frequency.
+
+The action-interface establishment between the GSM specific
+implementation and the core analyzer is illustrated on
+\cref{fig:analyzer_interface} which results in two different actions,
+scan and analyze.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/analyzer_interface}
+  \caption{The \gls{GSM}-analyzer inheritor informs the core analyzer
+    of its scan and analyze behaviors and builds an interface between
+    the two. Before passing the samples on to the inheritor, the core
+    analyzer filters them such that only low frequency samples are
+    passed through.}
+  \label{fig:analyzer_interface}
+\end{figure}
+
+These two actions are independent of one another, but scanning prior
+to analyzing allows the user to choose a known channel. Otherwise, the
+frequency or channel is chosen blindly and isn't necessarily
+occupied. Both of these actions require some sort of synchronization
+which leads to the synchronization layer.
+
+\section{Synchronization}
+Since any knowledge about channels initially is non-existant, the
+HackRF One must synchronize to a specific frequency and then to the
+beginning of a burst on this channel. The scan action solely attempts
+to find these unknown channels by performing a frequency search and
+returns its findings to the user, whom may then, specifically, choose
+to analyze one of these channels. The scan action may be performed
+prior to analyzing, but the user should not be forced to scan
+everytime, thus he or she may specify a channel to analyze
+directly. There are three different outtakes during
+synchronization. Either the application attempts to synchronize to a
+frequency, otherwise to the beginning of a burst or finally it is
+synchronized. Since synchronization may be lost, the application
+has to adapt to this situation and return to a synchronization state.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[>=stealth',shorten >=2pt,auto,node distance=5cm]
+    \node[initial,state] (S_0)                {Frequency};
+    \node[state]         (S_1) [above right=3cm and 5cm of S_2] {Time};
+    \node[state]         (S_2) [below right of=S_0] {Synchronized};
+
+    \path[->]
+      (S_0) edge [loop above]     node {FCCH not found} (S_0)
+            edge [bend right]  node [below] {FCCH found} (S_1)
+      (S_1) edge [bend right]     node [above] {Error in burst} (S_0)
+            edge [loop right]  node {Wait for SCH} (S_1)
+            edge [bend left]  node {SCH found} (S_2)
+      (S_2) edge [bend left]     node {Error in burst} (S_0)
+            edge [loop right] node {Decode and parse burst} (S_2);
+  \end{tikzpicture}
+  \caption{A rough sketch of the synchronization finite state
+    machine when analyzing data.}
+  \label{fig:ssm}
+\end{figure}
+
+\cref{fig:ssm} roughly illustrates the transitions during
+synchronization in a finite state machine and the three possible
+outcomes. The application initially starts in the frequency state and
+transitions to the time state if and when it finds the \gls{FCCH}
+channel. The scan action is a special case and it doesn't advance into
+the time state, instead it returns and notifies the user of the
+result. In either case, the frequency state must find the unique
+frequency correction burst to satisfy the condition.
+
+\subsection{Frequency state}
+\label{sec:freq_state}
+% TODO:
+%   ARFCN
+%   Scan band
+The frequency correction burst consists of only zero valued bits
+which, in continuous phase modulation, is a pure tone as illustrated
+in \cref{fig:gsm_fcch_pure_tone}, plotted from collected \gls{FCCH}
+data. Inspecting this burst further, reveals a positive phase
+difference of two samples over time as seen in
+\cref{fig:gsm_fcch_burst_phase}.
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Three dimensional phasor plot of a complex signal during a
+    pure FCCH tone at $67.7kHz$.]{
+    \input{figures/plots/gsm_fcch_pure_tone.tex}
+    \label{fig:gsm_fcch_pure_tone}
+  } \quad
+  \subfloat[Phase difference behavior of a pure tone in a continuous
+    phase modulation scheme.]{
+    \input{figures/plots/gsm_fcch_burst_phase_diff.tex}
+    \label{fig:gsm_fcch_burst_phase}
+  }
+  \caption{FCCH burst of length $576.92\mu s$
+    (\ref{fig:gsm_fcch_pure_tone}) and phase difference
+    (\ref{fig:gsm_fcch_burst_phase}) of pairs of complex samples over
+    time.}
+\end{figure}
+
+Thus, the frequency state condition can be satisfied by collecting a
+sequence of samples of the $158$ bits in a burst, times the \gls{OSR}
+and then confirm that all these hits, pairwise, result in a positive
+phase difference.
+
+To find the phase difference between a pair of samples, let $S_n$ and
+$S_{n-1}$ be two consecutive complex samples, in polar form
+$r_ne^{i\theta_{n}}$ and $r_{n-1}e^{i\theta_{n-1}}$, and their
+subtraction
+\begin{equation}
+  \begin{aligned}
+    S_n - S_{n - 1}
+    &= r_ne^{i \theta_n} - r_{n - 1}e^{{i \theta_{n - 1}}}\\
+    &= r_nr_{n - 1}e^{i \para{\theta_n - \theta_{n-1}}}\\
+    &= S_n \overline{S_{n - 1}},
+  \end{aligned}
+\end{equation}
+then their difference in angle is given by
+\begin{equation}
+  \begin{aligned}
+    \angle \para{S_n, S_{n - 1}}
+    = \text{arctan2} \para{\Im \para{S_n \overline{S_{n - 1}}},
+                           \Re \para{S_n \overline{S_{n - 1}}}}
+  \end{aligned}
+\end{equation}
+where arctan2 is two-argument software implementation of the
+arctangent function whose value range is $\left[-\pi;\pi\right[$.
+
+The transition to the time state is then satisfied if a sufficient
+amount of complex samples with a phase difference, as given above, are
+positive.
+
+\subsection{Time- and synchronized state}
+Once the frequency correction burst is found, the state machine
+advances to the time state where the beginning of the frequency
+correction burst is known. According to the $51$ \gls{TDMA} frame, a
+synchronization burst follows one \gls{TDMA} frame later, thus by
+waiting $4.6\si{ms}$, the duration of a \gls{TDMA} frame, the sample
+at this point in time is a synchronization
+burst. \cref{fig:sch_time_wait} illustrates how the synchronization
+burst is sent one frame later.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figures/sch_time_wait}
+  \caption{A synchronization burst (violet) is transmitted one
+    TDMA frame after the frequency correction burst (red).}
+  \label{fig:sch_time_wait}
+\end{figure}
+
+All bursts, except for frequency correction, carry a fixed training
+sequence midway, and knowing that part of the transmitted data, much
+of the noise in the signal is countered by matching the pulse shape
+and thus finding the impulse response of the matched filter. Since
+information is carried in phase, the known training sequence is first
+mapped to a rotated sequence, $T^* \sq{n}$ and the received, sampled signal
+$r \para{t}$ is $v \para{t}$ with noise
+
+\begin{equation}
+  r \para{t} = v \para{t} + n \para{t}.
+\end{equation}
+
+Recall from the signal processing chapter, that symbols were mapped to
+complex values, $\curly{1, j, -1, -j}$.
+
+A symbol rate sampled version of $r \para{t}$, denoted as a discrete
+signal $r_T \sq{n}$, is cross-correlated with the known, rotated
+training sequence $T^{\ast} \sq{n}$, at the training sequence offset
+
+\begin{equation}
+  R_m\sq{n} \approx r_T\sq{n} \star T^* \sq{n + m}.
+\end{equation}
+
+Due to the nature of the \gls{GSM} training sequences, their ideal
+autocorrelation with lag $m$ gives a highly peaked function,
+
+\begin{equation}
+  R_m \sq{n} = \begin{cases}
+    16 & m = 0\\
+    0 & m \in \curly{\pm5, \pm4, \pm3, \pm2, \pm1}.
+  \end{cases}
+  \label{eq:peak_nature}
+\end{equation}
+
+The training sequence is therefore easy to distinguish in a signal
+with noise. By examining the energy of the cross-correlation with
+different lag, $m$, over a desired impulse length, $L_h$ of at most
+$5$, the estimated energy then gives an idea of the beginning of the
+estimated impulse response. The impulse length is limited due to the
+peak nature in \cref{eq:peak_nature}. The energy is summarized by
+
+\begin{equation}
+  P \para{m} = \sum\limits^{m+L_h}_{i = m} \para{R_i \sq{n}}^2.
+\end{equation}
+
+The maximum energy at lag $m_{max}$, then refers to the start index of
+the impulse response in $R_{m}\sq{n}$ and it may be estimated as
+\begin{equation}
+  h \sq{n} = R_{m_{max}} \sq{n}
+\end{equation}
+
+The time and synchronized state are similar in that, both states
+attempt to detect and decode bursts, thus by estimating the impulse
+response in the matched filter, bursts are now detectable in each
+case. The time state proceeds to the synchronized state, if the burst
+is successfully decoded, which leads to the estimation of the actual
+symbol sequence based on the filtered signal and rotation mapped
+training sequences.
+
+\section{Sequence estimation}
+In both the time and synchronized state an attempt is made to estimate
+the sequence of symbols within a burst. The impulse response of the
+matched filter is used for this purpose, and the fact that the exact
+time between samples is found by the correlation of training
+sequences, means that both of these can be used to determine the
+actual digital information. Similar to the channel decoding, the
+symbol sequence estimation also uses the Viterbi algorithm for the
+\gls{MLSE}. This design is based on the design and MATLAB
+implementation documented in the technical report for
+GSMsim~\cite{ekstr1997a}.
+
+The probable shifts in phase during a change of state is estimated by
+using the autocorrelation of the impulse response to examine the gain
+between every possible outcome. The autocorrelation holds information
+of the following samples and thus can be used to help determine the
+probable sequence of rotations based on the gain of previous
+decisions.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=stealth',shorten >=2pt,auto]
+    \foreach \i in {1,...,6} {
+      \pgfmathtruncatemacro{\prevCol}{(\i - 1)};
+      \ifnum\prevCol=0
+        \node[state,initial above] (S_0_\i) {\footnotesize$S_0$};
+      \else
+        \node[state] (S_0_\i) [right=0 and 1.2cm of S_0_\prevCol] {\footnotesize$S_0$};
+      \fi
+      \node[state] (S_1_\i) [below=0.3cm and 0 of S_0_\i]         {\footnotesize$S_1$};
+      \node[state] (S_2_\i) [below=0.3cm and 0 of S_1_\i]         {\footnotesize$S_2$};
+      \node[state] (S_3_\i) [below=0.3cm and 0 of S_2_\i]         {\footnotesize$S_3$};
+      \node[state] (S_4_\i) [below=0.3cm and 0 of S_3_\i]         {\footnotesize$S_4$};
+      \node[state] (S_8_\i) [below=0.6cm and 0 of S_4_\i]         {\footnotesize$S_8$};
+
+      \node (vdots) [below=-0.2cm of S_4_\i] {$\vdots$};
+      \node (vdots_\i) [below=-0.2cm of S_8_\i] {$\vdots$};
+      \node (time) [below=0.8cm of S_8_\i] {$n_{\i}$};
+    }
+
+    \path[->] (S_0_1) edge [dashed] node {} (S_0_2)
+                      edge          node {$j$} (S_1_2)
+              (S_1_2) edge [dashed] node {$-1$} (S_2_3)
+                      edge          node {} (S_3_3)
+              (S_2_3) edge [dashed] node {$-j$} (S_4_4)
+              (S_4_4) edge [dashed] node {$-1$} (S_8_5)
+                      edge          node {}     (vdots_5.west)
+              (S_8_5) edge [out=45,in=210,dashed] node {$-j$} (S_0_6)
+                      edge [out=25,in=225]        node {}     (S_1_6);
+
+    \node (dots) [below right=0.25cm and 0.5cm of S_2_6] {$\dots$};
+  \end{tikzpicture}
+  \caption{A trellis is built to estimate the probable values of the
+    $148$ bits within a burst. Due to the way symbols are split across
+    \gls{I}/\gls{Q} samples every transition shifts between a real- or
+    a complex rotation value, either positive or negative represented
+    by a dashed line. The path metric is given by \cref{eq:gain} and
+    this example has previous shifts in state $S_0$ of $\sigma \sq{6}
+    = \curly{-1, -j, -1, -j}$.}
+  \label{fig:viterbi_detector_trellis}
+\end{figure}
+
+The most probable sequence of rotations are estimated based on the
+maximum path metric, given by the gain expressed in
+\cref{eq:gain}. Looking at the multiplication between the sum of
+products of the previous decisions, $I \sq{m}$, and the
+autocorrelation of $h$, $R_{hh}$, and the complex conjugate of the two
+possible next state decisions, gives two candidates for a positive and
+a negative transition.
+
+\begin{equation}
+  \text{Gain} \para{Y\sq{n}, S_p, S_c} = \Re \para{\overline{I \sq{n}}Y \sq{n}} -
+  \Re \para{\overline{I \sq{n}} \sum\limits_{m=n-L_h}^{n - 1} I \sq{m}
+    R_{hh}\sq{n - m}}
+  \label{eq:gain}
+\end{equation}
+
+\cref{fig:viterbi_detector_trellis} illustrates two possible
+transitions for each state, either a negative or a positive, and the
+$n$th state is defined as a $L_h$-long set
+\begin{equation}
+  \begin{aligned}
+    \sigma \sq{n} &=
+      \curly{I \sq{n}, I \sq{n - 1}, \dots, I \sq{n - \para{L_h -
+            1}}}\\
+      &\Updownarrow\\
+      \sigma \sq{n} &\in \curly{S_0, S_1, \dots, S_M} \text{ for } M = 2^{L_h + 1}.
+  \end{aligned}
+\end{equation}
+
+Just half the states, $M$, are necessary since only half of the
+transitions are possible, shifting either by a complex or a real
+value.
+
+The final sequence of rotated symbols are estimated by the total gain
+throughout the trellis of $148$ bits by traversing the tree and noting
+each rotation. These values may then be demapped directly to the
+original binary sequence.
+
+\section{Burst analysis}
+With an estimated binary sequence, recall that data is interleaved
+over multiple bursts. It is therefore necessary to fetch three
+succeeding bursts, in total four, to deinterleave data and restore the
+original information. Also recall that some of the data is protected
+by a convolutional code that doubles the number of transferred
+bits. By reverting these coding schemes, and fixing eventual errors,
+the actual payload can be parsed. This process, as seen in
+\cref{fig:burst_analysis}, leaves the last part of the structure of
+the application and \gls{GSM} protocol specific messages can be
+read. For speech traffic, this sequence of data must be decrypted
+prior to decoding.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/burst_analysis}
+  \caption{The sequence estimator passes the demapped binary data to
+    the decode block, which reverts the interleaving and convolution
+    of the data and reconstructs the LAPDm frame ready for
+    parsing.}
+  \label{fig:burst_analysis}
+\end{figure}
+
+\subsection{Decode}
+The \gls{GSM} standards define the channel coding as presented in
+\cref{sec:channel_coding}, which specifies the function of this part
+of the application by reverting the encoding. Given the estimated
+binar sequence, the data payload must be extracted and deinterleaved
+before being deconvolved to the original structure.
+
+\subsubsection{Deinterleave}
+The tail bits and the training sequence are not interesting once the
+system is synchronized. Thus, before reverting the interleaving
+process, four bursts are gathered and their $114$ payload bits are
+extracted. The extracted payload is then concatenated into a sequence
+of $456$ bits. E.g.\ for a normal burst, the interleaved bit sequence,
+with the latest burst $n$, is found by
+\begin{equation}
+  S_{Ib} \sq{n} = \bigparallel_{i = -3}^0 \para{
+        \para{B_{n + i}\sq{k + 3}}^{56}_{k=0} \Vert
+        \para{B_{n + i}\sq{k + 88}}^{56}_{k=0}}.
+\end{equation}
+
+Both data fields in a normal burst are $57$ long and their position is
+at offset $3$ and $88$, respectively. The concatenated and interleaved
+bit sequence, $S_{Ib}$, may then be deinterleaved using the
+translation sequence, $S_T$,
+\begin{equation}
+  S_T\sq{k} = \para{k \mod 4} \cdot 114 + \para{\para{49 \cdot k}
+      \mod 57} \cdot 2 + \para{\para{k \mod 8} / 4}.
+\end{equation}
+Looking up an index in this sequence, will return a value that
+corresponds to the actual index in the interleaved bit sequence. The
+deinterleaved bit sequence, now only convolved, is then given by
+\begin{equation}
+  S_{Cb} = S_{Ib} \sq{S_T \sq{k}}.
+\end{equation}
+
+\subsubsection{Deconvolution}
+The block coding of control channels adds a \gls{CRC} check to the
+bits and four filler bits. In order to decode $S_{Cb}$ in this case,
+the sequence is first deconvolved using the Viterbi algorithm with a
+code rate of $1/2$, and then divided up into its parts of data and
+\gls{CRC} sequence. The estimated burst sequence is found by feeding
+the convolved sequence to the Viterbi algorithm,
+
+\begin{equation}
+  S_b = Viterbi \para{S_{Cb}}.
+\end{equation}
+
+\cref{fig:viterbi_trellis_decoding} gives an example of a convolved
+burst sequence, $S_{Cb}$, that is passed to the Viterbi deconvolution
+algorithm and in return results in an estimation of the original bit
+sequence. Should the estimation result in a wrong decision, then the
+\gls{CRC} bits may be used to correct the sequence otherwise the data
+should be dropped.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[>=stealth',shorten >=2pt,auto]
+    \foreach \i in {1,...,4} {
+      \pgfmathtruncatemacro{\prevCol}{(\i - 1)};
+      \ifnum\prevCol=0
+        \node[state,initial above] (S_0_\i) {$S_0$};
+      \else
+        \node[state] (S_0_\i) [right=0 and 2cm of S_0_\prevCol] {$S_0$};
+      \fi
+      \node[state] (S_1_\i) [below=0.5cm and 0 of S_0_\i]       {$S_1$};
+      \node[state] (S_2_\i) [below=0.5cm and 0 of S_1_\i]       {$S_2$};
+      \node[state] (S_3_\i) [below=0.5cm and 0 of S_2_\i]       {$S_3$};
+    }
+
+    \path[->]
+    % S_0 for all columns
+      (S_0_1) edge [dashed,_green3] node {\tiny$2$} (S_0_2)
+              edge [very thick,_green3]  node {\tiny$0$} (S_1_2)
+      (S_0_2) edge [dashed,_green3] node {\tiny$1$} (S_0_3)
+              edge [_green3]        node {\tiny$1$} (S_1_3)
+      (S_0_3) edge [dashed,_green3] node {\tiny$1$} (S_0_4)
+              edge [_green3]        node {\tiny$1$} (S_1_4)
+    % S_1 for columns 1 and forward
+      (S_1_2) edge [dashed,very thick,_blue3] node {\tiny$0$} (S_2_3)
+              edge [_blue3]              node {\tiny$2$} (S_3_3)
+      (S_1_3) edge [dashed,_blue3] node {\tiny$0$} (S_2_4)
+              edge [_blue3]         node {\tiny$2$} (S_3_4)
+    % S_2 for columns 2 and forward
+      (S_2_3) edge [very thick,dashed,_red3] node {\tiny$0$} (S_0_4)
+              edge [_red3]  node {\tiny$2$} (S_1_4)
+    % S_3 for columns 2 and forward
+      (S_3_3) edge [dashed] node {\tiny$2$} (S_2_4)
+              edge          node {\tiny$0$} (S_3_4);
+    \node (dots) [below right=0.25cm and 0.5cm of S_1_4] {$\dots$};
+  \end{tikzpicture}
+  \caption{As an example, given the sequence $\para{11, 10, 11}$, the
+    most likely output sequence becomes $\para{1, 0, 0}$ since it has
+    the smallest path metric of $0$ across the trellis. The input
+    sequence is compared to the transition constraints as illustrated
+    in \cref{fig:viterbi_fsm}, $\para{00/11,10/01,11/00}$}
+  \label{fig:viterbi_trellis_decoding}
+\end{figure}
+
+\subsection{Parse}
+The parsing stage translates the received binary sequence, $S_b$ into
+recognized data structures within the \gls{LAPDm} frame and formats
+the data for easy readability. Recall the layer three protocols of the
+\gls{GSM} stack from \cref{sec:protocol_stack}, these are categorized
+and the types of messages sent on the Um interface can be translated
+into meaningful information.
+
+The \gls{LAPDm} frame can take shape of six different formats, where
+each format is tied to \gls{GSM} channel types. In that case the B,
+Bter, B4 and A formats are used on \glspl{DCCH}, where the latter has
+no information field. The Bbis format is tied to the remaining types
+that are \glspl{CCCH}, except for the \gls{SCH} channel that does not
+follow the basic formatting. The parser is designed around these three
+cases of format differences, where the \gls{SCH} uses the
+synchronization burst and is identified before the parser. A normal
+burst is used for both the common- and dedicated channels and the
+parser must examine the \gls{LAPDm} header to determine the type of
+these.
+
+The layer three type is identified by the \gls{PD} value as the
+first octet of the information field. The different types are listed
+in \cref{tab:protocol_discriminators}. This knowledge provides a way
+to construct a branch for each type and categorize the payload.
+
+Layer three messages further identify themselves by a message type,
+which follows the \gls{PD} value and the specifics of these are
+described in more detail in the 3GPP technical specification; Mobile
+radio interface layer 3 specification~\cite{layer32}.
+\begin{table}
+  \centering
+  \begin{tabular}{|ll|l|}
+    \hline
+    bits & 4321 &￼\\
+    \hline
+         & 0000 & group call control\\
+    \hline
+         & 0001 & broadcast call control\\
+    \hline
+         & 0010 & \gls{PDS}S1\\
+    \hline
+         & 0011 & call control; call related \gls{SS} messages\\
+    \hline
+         & 0100 & \gls{PDS}S2\\
+    \hline
+         & 0101 & mobility management messages\\
+    \hline
+         & 0110 & radio resources management messages\\
+    \hline
+         & 1000 & \gls{GPRS} mobility management messages\\
+    \hline
+         & 1001 & \gls{SMS} messages\\
+    \hline
+         & 1010 & \gls{GPRS} session management messages\\
+    \hline
+         & 1011 & non call related \gls{SS} messages\\
+    \hline
+         & 1100 & location services\\
+    \hline
+         & 1110 & reserved for extension of the \gls{PD} to one octet
+                  length\\
+    \hline
+         & 1111 & reserved for tests procedures\\
+    \hline
+  \end{tabular}
+  \caption{A list of possible \glspl{PD} used in the first octet of
+    the \gls{LAPDm} B/Bbis-format information
+    field~\cite[p. 87]{layer3}.}
+  \label{tab:protocol_discriminators}
+\end{table}

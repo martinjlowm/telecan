@@ -1,0 +1,83 @@
+\chapter{Introduction}
+The \glsentryfull{GSM}, has grown to be the leading mobile
+communication standard in the world since first introduced in
+1982. \gls{GSM} was initially developed as a wireless alternative to
+the \gls{PSTN}, which allowed intercommunication in both
+technologies. \gls{GSM} was later developed to support packet
+switching as a \gls{GPRS}, meaning it had access to the
+Internet. Circuit- and packet switched networks share a stack of
+protocols used on the Um air interface between a \glsentryfull{BTS},
+and the mobile phone. One of such protocols is the \gls{LAPDm}, used
+in the data link layer.
+
+Since the air interface is an open medium, it is possible to listen in
+on communication between a mobile phone and the base station. Using a
+\glsentryfull{SDR}, some \gls{GSM} communication can be decoded by
+implementing the freely available \gls{GSM} standards through software
+as specified by the \gls{3GPP}. For security reasons, dedicated user
+data that are exchanged are encrypted with an A/5.1 stream cipher, but
+unfortunately, such data can be decrypted
+quickly~\cite{barkan}. Newer, faster and more secure technologies
+exist today to counter this vulnerability, for example \gls{UMTS},
+\gls{HSPA}, and \gls{LTE}.\ While \gls{LTE} and newer technologies are
+slowly getting deployed globally to fulfill customer needs of
+\gls{QoS}, \gls{GSM} remains the leading standard in mobile coverage
+for now.
+
+An \gls{SDR} is built with the purpose of handling radio signals in
+software. This is done by having \gls{SDR}-hardware sample radio
+signals and forward those samples to host memory of a computer. HackRF
+One is such a peripheral that forwards samples over a \gls{USB}.\ The
+\gls{USB} interface also allows the HackRF to be configured by
+software. Examples of such configurable parameters are tune frequency,
+sample rate and gain. Its \gls{USB} interface is operated using the
+HackRF C library, libhackrf.
+
+The prime motivation of this thesis, is to contribute a tool which can
+be used for education purposes in understanding of- and learning about
+mobile communications. \gls{SDR} provides the means to make this
+possible on a low budget and the software behind \gls{SDR}, makes it a
+flexible tool for many applications. \gls{GSM} is one example.
+
+In this report, I examine the \gls{GSM} technology and describe my
+design and implementation of a mobile network protocol analyzer piece
+of software, in terms of displaying mobile communication in real time,
+using a HackRF One, an \gls{SDR}.\ The protocol analyzer software is
+developed with several mobile communications technologies in mind for
+easy extension, but currently only supports \gls{GSM}.\ It
+synchronizes with a near base station and decodes data sent over the
+air in the downlink direction.
+
+\section{Thesis outline}
+The thesis is outlined as briefly described in the following.
+\begin{itemize}
+\item Chapter 2 dives into alternative solutions and related work that
+  accomplish the same functionality as the design and implementation
+  for parsing \gls{GSM} traffic proposed in this thesis.
+\item The infrastructure behind \gls{GSM} is walked through in Chapter
+  3 starting with a wide perspective of the infrastructure that then
+  digs into the Um interface between the \gls{BTS} and the mobile
+  entity, its design and its \gls{LAPDm} protocols.
+\item By further describing the Um interface, Chapter 4 looks into the
+  theory behind the processing of signals on this interface. The
+  chapter briefly describes sampling of a signal and modulation
+  schemes used on the Um interface.
+\item Chapter 5 takes the two previous chapters and describes
+  \gls{SDR} in general in respect to mobile communications with focus
+  on \gls{GSM}.\
+\item Chapter 6 describes my ideas for- and design of the mobile
+  network protocol analyzer with the \gls{SDR} interaction and each
+  operation following the flow of samples towards the parsing element
+  in the application.
+\item The specifics of the implementation are introduced in Chapter 7
+  which follows a similar flow of Chapter 6.
+\item Chapter 8 evaluates my implementation of the protocol analyzer
+  and a few examples of \gls{GSM} broadcast traffic content are tested
+  on a $1800\si{MHz}$ \gls{GSM} band.
+\item Some improvements and ideas that didn't make it to the current
+  implementation, but may be implemented in the future are discussed
+  in Chapter 9.
+\item Chapter 10 evaluates and discusses my process throughout the
+  project.
+\item Finally, Chapter 11 concludes on the project.
+\end{itemize}

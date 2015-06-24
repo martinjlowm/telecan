@@ -1,0 +1,28 @@
+\thispagestyle{empty}             % No page numbers
+\calccentering{\unitlength}
+\begin{adjustwidth*}{\unitlength}{-\unitlength}
+    \begin{adjustwidth}{-0.5cm}{-0.5cm}
+        \sffamily
+        \begin{flushright}
+            \thesistypeabbr{} Thesis\\*[0cm]
+            \thesistype{}\\
+        \end{flushright}
+        \vspace*{\fill}
+        \noindent
+        % TODO: make logo for every institute
+        \includegraphics[width=0.75\textwidth]{DTU-Compute-B-UK}\\*[0.5cm]
+        \HUGE \thesistitle{}\\*[0.2cm]
+        \Huge \thesissubtitle{}\\*[1.2cm]
+        \parbox[b]{0.5\linewidth}{%
+          \raggedright
+            \LARGE
+            \thesisauthor{}\\*[1.2cm]
+            \Large
+            \thesislocation{} \the\year
+        }
+        % TODO: vectorize this
+        \hfill\includegraphics[scale=0.7]{DTU-logo-CMYK}
+    \end{adjustwidth}
+\end{adjustwidth*}
+\normalfont
+\normalsize

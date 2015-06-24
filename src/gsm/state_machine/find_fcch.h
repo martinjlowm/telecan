@@ -32,57 +32,82 @@
 #include "gsm/state_machine/state.h"
 #include "gsm/state_machine/base.h"
 
+#include <boost/circular_buffer.hpp>
+
 namespace GSM {
 namespace StateMachine {
 
+class Synchronize;
+
 class FindFCCH : public Base {
  public:
-  FindFCCH();
+  explicit FindFCCH(Synchronize *ssm);
 
-  bool IsFCCHFound();
-  void FoundFCCH(bool found_fcch);
+  bool FCCH_found();
+  void set_FCCH_found(bool found_fcch);
+  bool searching();
+  void set_searching(bool found_fcch);
+  double computed_freq_offset();
+  void set_computed_freq_offset(double freq_offset);
 
-  void Execute();
-
-  class FCCH : public State {
-   public:
-    void Execute(Base *ffsm);
-  };
-
+  // Inital-state.
   class Initial : public State {
    public:
-    void Execute(Base *ffsm);
+    void Execute(Base *ffsm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
   friend class Initial;
 
+  // Search-state.
   class Search : public State {
    public:
-    void Execute(Base *ffsm);
+    void Execute(Base *ffsm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
   friend class Search;
 
+  // Something is found-state.
   class FoundSomething : public State {
    public:
-    void Execute(Base *ffsm);
+    void Execute(Base *ffsm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
   friend class FoundSomething;
 
+  // FCCH is found-state.
   class FoundFCCH : public State {
    public:
-    void Execute(Base *ffsm);
+    void Execute(Base *ffsm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
   friend class FoundFCCH;
 
+  // Search failed-state.
   class SearchFailed : public State {
    public:
-    void Execute(Base *ffsm);
+    void Execute(Base *ffsm,
+                 const gr_complex *samples,
+                 uint32_t num_samples);
   };
   friend class SearchFailed;
 
  private:
-  bool fcch_found_;
-};
+  Synchronize *ssm_;
+  bool FCCH_found_;
+  bool searching_;
 
+  uint32_t hit_count_;
+  uint32_t miss_count_;
+  int32_t start_position_;
+  double best_sum_;
+  int32_t min_extrema_phase_diff_;
+  boost::circular_buffer<float> phase_diff_buffer_;
+  double computed_freq_offset_;
+};
 }  // namespace StateMachine
 }  // namespace GSM
 

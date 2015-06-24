@@ -29,6 +29,8 @@
 #ifndef GSM_STATE_MACHINE_STATE_H_
 #define GSM_STATE_MACHINE_STATE_H_
 
+#include "device/hackrf.h"
+
 namespace GSM {
 namespace StateMachine {
 
@@ -37,7 +39,9 @@ class Base;
 class State {
  public:
   virtual ~State() {}
-  virtual void Execute(Base *bsm) = 0;
+  virtual void Execute(Base *bsm,
+                       const gr_complex *samples,
+                       uint32_t num_samples) = 0;
 };
 
 }  // namespace StateMachine

@@ -29,25 +29,18 @@
 #include <getopt.h>
 #include <libgen.h>
 
-#ifndef USRP_SOURCE_H_
-#define USRP_SOURCE_H_
-#include <usrp_source.h>
-#endif
-#include <arfcn_freq.h>
-
+#include "helper_functions.h"
+#include "device/hackrf.h"
 #include "gsm/analyzer.h"
 #include "gsm/constants.h"
 // #include "umts/analyzer.h"
 // #include "lte/analyzer.h"
 
-// GSM 1800 has the most channels.
-#define MAX_GSM_CHANNELS (885 - 512)
-
 int g_verbosity = 0;
 int g_debug = 0;
 
 void usage(char *prog) {
-  printf("telecom_analyzer based on kalibrate, Copyright (c) 2015, Martin Jesper Low Madsen\n");
+  printf("telecom_analyzer, Copyright (c) 2015, Martin Jesper Low Madsen\n");
   printf("\nUsage:\n");
   printf("\tBase Station scan:\n");
   printf("\t\t%s -s <band indicator>\n", basename(prog));
@@ -66,9 +59,9 @@ void usage(char *prog) {
 int main(int argc, char **argv) {
   bool scan_bts = false;
   int option, band_indicator, channel = -1;
-  int64_t fpga_master_clock_freq = 8000000;  // lowest rate supported
-  unsigned int decimation = fpga_master_clock_freq / GSM_RATE;
-  usrp_source *usrp;
+  int64_t sample_rate = kSampleRate;  // lowest rate supported
+  // unsigned int decimation = sample_rate / kGSMBitRate;  // decimation is tech dependent.
+  Device::HackRF *sdr;
 
   while ((option = getopt(argc, argv, "c:s:b:h?")) != EOF) {
     switch (option) {
@@ -94,9 +87,9 @@ int main(int argc, char **argv) {
     }
   }
 
-  usrp = new usrp_source (decimation, fpga_master_clock_freq);
-  if (!usrp) {
-    fprintf(stderr, "Error: usrp_source\n");
+  sdr = new Device::HackRF(sample_rate);
+  if (!sdr) {
+    fprintf(stderr, "Error: sdr_source\n");
     return -1;
   }
 
@@ -116,15 +109,21 @@ int main(int argc, char **argv) {
       band_indicator == GSM_E_900 ||
       band_indicator == DCS_1800 ||
       band_indicator == PCS_1900) {
-    analyzer = new GSM::Analyzer(usrp, band_indicator, scan_bts);
+    analyzer = new GSM::Analyzer(sdr, band_indicator, scan_bts);
 
     if (analyzer->HasScanned()) {
-      std::map<int, double> *channels = analyzer->GetAvailableChannels();
+      std::map<int, double> channels = analyzer->GetAvailableChannels();
+      std::map<int, double>::iterator channel_iterator;
+
       printf("Scan is complete. Found %lu channels.\n", channels.size());
-      for (const auto element : channels) {
-        printf("\tChannel: %d\tFrequency:%.2f\n", element->first, element->second);
+      for (channel_iterator = channels.begin();
+           channel_iterator != channels.end();
+           ++channel_iterator) {
+        printf("\tChannel: %d\tFrequency:%.4fHz\n",
+               channel_iterator->first,
+               channel_iterator->second);
       }
-      channel = 781;
+      channel = 782;
       // channel = // Choose from GUI <--------------
       // Allow the user to choose one of these frequencies at some
       // point.
@@ -136,7 +135,7 @@ int main(int argc, char **argv) {
   } else {
     return 0;
   }
-  analyzer->SetCurrentChannel(channel);
+  analyzer->set_current_channel(channel);
 
   // Run synchronization state machine
   analyzer->Analyze();
