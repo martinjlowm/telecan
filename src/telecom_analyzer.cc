@@ -40,7 +40,7 @@ int g_verbosity = 0;
 int g_debug = 0;
 
 void usage(char *prog) {
-  printf("telecom_analyzer, Copyright (c) 2015, Martin Jesper Low Madsen\n");
+  printf("telecan\n");
   printf("\nUsage:\n");
   printf("\tBase Station scan:\n");
   printf("\t\t%s -s <band indicator>\n", basename(prog));
@@ -59,8 +59,8 @@ void usage(char *prog) {
 int main(int argc, char **argv) {
   bool scan_bts = false;
   int option, band_indicator, channel = -1;
-  int64_t sample_rate = kSampleRate;  // lowest rate supported
-  // unsigned int decimation = sample_rate / kGSMBitRate;  // decimation is tech dependent.
+  int64_t sample_rate = kSampleRate;
+
   Device::HackRF *sdr;
 
   while ((option = getopt(argc, argv, "c:s:b:h?")) != EOF) {

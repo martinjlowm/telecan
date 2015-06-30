@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 2.6)
 project(telecan CXX C)
 set(TELECAN_MAJOR_VERSION 0)
 set(TELECAN_MINOR_VERSION 1)
-set(TELECAN_PATCH_VERSION fa71b56)
+set(TELECAN_PATCH_VERSION b0a59a1)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
 
 option(test "Build all tests." OFF)
@@ -43,31 +43,17 @@ endif()
 ########################################################################
 # Find gnuradio build dependencies
 ########################################################################
-# set(GR_REQUIRED_COMPONENTS RUNTIME PMT)
 find_package(Gnuradio)
 find_package(LibHackRF)
-# find_package(Volk)
-# find_package(CppUnit)
-# find_package(Doxygen)
 
 if(NOT GNURADIO_RUNTIME_FOUND)
     message(FATAL_ERROR "GnuRadio Runtime required to compile gr-gsm")
 endif()
-# if(NOT VOLK_FOUND)
-#     message(FATAL_ERROR "Volk library required to compile gr-gsm")
-# endif()
-# if(NOT CPPUNIT_FOUND)
-#     message(FATAL_ERROR "CppUnit required to compile gr-gsm")
-# endif()
 
 ########################################################################
 # Setup the include and linker paths
 ########################################################################
 include_directories(
-    # ${CMAKE_SOURCE_DIR}/lib
-    # ${CMAKE_SOURCE_DIR}/include
-    # ${CMAKE_BINARY_DIR}/lib
-    # ${CMAKE_BINARY_DIR}/include
     src
     ${Boost_INCLUDE_DIRS}
     ${CPPUNIT_INCLUDE_DIRS}
