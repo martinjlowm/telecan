@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 2.6)
 project(telecan CXX C)
 set(TELECAN_MAJOR_VERSION 0)
 set(TELECAN_MINOR_VERSION 1)
-set(TELECAN_PATCH_VERSION af94259)
+set(TELECAN_PATCH_VERSION e3f851d)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
 
 option(test "Build all tests." OFF)
