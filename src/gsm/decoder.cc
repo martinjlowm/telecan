@@ -78,6 +78,7 @@ bool GSM::Decoder::Decode(uint8_t *encoded_burst,
     uint8_t *burst_buffer = ssm_->burst_counter_->get_buffer();
     uint32_t num_stored_bursts = ssm_->burst_counter_->num_stored_bursts();
 
+    // Store four consecutive bursts before decoding.
     if (num_stored_bursts == kNormalBlocks) {
       uint8_t interleaved_data[kNormalBlocks * kNormalBlockSize];
       uint8_t data_buffer[kNormalConvSize];
@@ -106,7 +107,6 @@ bool GSM::Decoder::Decode(uint8_t *encoded_burst,
 
       buffer_ptr = data_buffer;
     } else {
-      // Causes segfault some times
       memcpy(burst_buffer + num_stored_bursts * kBurstSize, encoded_burst, kBurstSize);
 
       ssm_->burst_counter_->set_num_stored_bursts(num_stored_bursts + 1);

@@ -36,7 +36,7 @@ GSM::BurstCounter::BurstCounter() {
     InitializeFrameLUT(i, kDCCHFrames, sizeof(kDCCHFrames), NORMAL_OR_DUMMY);
   }
 
-  for (i = 1; i < kTimeslotsPerFrame; i++) {
+  for (i = 0; i < kTimeslotsPerFrame; i++) {
     num_stored_bursts_[i] = 0;
   }
 }
