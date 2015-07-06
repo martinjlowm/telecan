@@ -7,5 +7,5 @@ radio, SDR.
 Currently, only a HackRF One is supported and only few things of the
 _global system for mobile communications-_, GSM-, standard works.
 
-Much of the GSM code is based on gr-gsm by Piotr Krysik and other
+Much of the GSM code is inspired by gr-gsm by Piotr Krysik and other
 projects thereof.

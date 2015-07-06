@@ -139,7 +139,8 @@ const uint32_t kSyncDataLen = 39;
 const uint32_t kSyncDataBlockSize = 25;
 const uint32_t kSyncParitySize = 10;
 const uint32_t kSyncFillBits = 4;
-const uint32_t kSyncParityOutputSize = kSyncDataBlockSize + kSyncParitySize + kSyncFillBits;
+const uint32_t kSyncParityOutputSize = kSyncDataBlockSize + kSyncParitySize +
+    kSyncFillBits;
 const uint32_t kSyncConvInputSize = kSyncParityOutputSize;
 const uint32_t kSyncConvSize = 2 * kSyncConvInputSize;
 const uint32_t kSyncMaxError = kSyncConvSize + 1;
@@ -148,7 +149,8 @@ const uint32_t kSyncMaxError = kSyncConvSize + 1;
 const uint32_t kNormalDataBlockSize = 184;
 const uint32_t kNormalParitySize = 40;
 const uint32_t kNormalFillBitsSize = 4;
-const uint32_t kNormalParityOutputSize = kNormalDataBlockSize + kNormalParitySize + kNormalFillBitsSize;
+const uint32_t kNormalParityOutputSize = kNormalDataBlockSize +
+    kNormalParitySize + kNormalFillBitsSize;
 const uint32_t kNormalConvInputSize = kNormalParityOutputSize;
 const uint32_t kNormalConvSize = 2 * kNormalConvInputSize;
 const uint32_t kNormalMaxError = kNormalConvSize + 1;
